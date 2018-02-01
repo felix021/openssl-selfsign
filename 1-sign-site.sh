@@ -16,7 +16,7 @@ if [ -d site/$domain ]; then
 fi
 mkdir -p site/$domain
 
-subject="/O=$domain/CN=$domain/subjectAltName=*.$domain/emailAddress=admin@$domain"
+subject="/O=$domain/CN=*.$domain/subjectAltName=*.$domain/emailAddress=admin@$domain"
 
 filename=site/$domain/cert
 
