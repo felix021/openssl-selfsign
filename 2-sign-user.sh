@@ -36,13 +36,13 @@ subject="/O=$domain/CN=$username/emailAddress=$username@$domain"
 
 mkdir -p $dir
 filename=user/$serial_no/$username
-pass=`python -c "import random; print ''.join(['%02x' % ord(c) for c in open('/dev/random').read(3)])"`
+pass=`python -c "import zlib, random; print '%08x' % abs(zlib.crc32(open('/dev/random').read(8)))"`
 echo $pass > ${filename}.pass
 
 openssl genrsa -out ${filename}.key 4096
 openssl req -new -key ${filename}.key -out ${filename}.csr -subj "$subject"
 openssl x509 -req -days 365 -in ${filename}.csr -CA $CA_ROOT/ca.crt -CAkey $CA_ROOT/ca.key -set_serial $serial_no -out ${filename}.crt
-openssl pkcs12 -export -clcerts -in ${filename}.crt -inkey ${filename}.key -out ${filename}.p12 -password pass:$pass
+openssl pkcs12 -export -clcerts -certfile $CA_ROOT/ca.crt -in ${filename}.crt -inkey ${filename}.key -out ${filename}.p12 -password pass:$pass
 
 echo "succussfully signed user $username:"
 echo "  cert file: ${filename}.p12"
