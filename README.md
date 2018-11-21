@@ -12,11 +12,13 @@ to generate https certificate for `yourdomain.com` and `*.yourdomain.com`
 
 # set up nginx
 
-refer to `html/nginx.conf`
+Refer to `cert/site/<yourdomain.com>/nginx.conf`
+
+**NOTICE**: by default, `crl.pem` expires in 365 days, don't forget to update it in time, otherwise nginx will **REJECT ALL** requests . If you don't need it, comment out that line.
 
 # generate https certificate:
 
-You can now use certs located at `site/yourdomain.com/`.
+You can now use https certificates located at `cert/site/yourdomain.com/`.
 
 If you wish to sign for another domain, you can try this:
 
@@ -24,6 +26,59 @@ If you wish to sign for another domain, you can try this:
 
 # generate client side certificate:
 
-    $ ./2-sign-user.sh <your-name>
+    $ ./2-sign-user.sh <cert-holder-name>
 
-Each cert will be assigned a serial no for later use in crl file (if necessary)
+A PKCS#12 certificate (\<cert-holder-name\>.p12, and corresponding password) will be assiged to the user, which can be imported in both Windows, MacOS, iOS, Android.
+
+Tips: For iOS, the Mail app (pre-installed with iOS) helps.
+
+# revoke certificate
+
+    $ ./3-revoke-user.sh <cert-holder-name>
+
+`./cert/crl.pem` will be updated. Replace with it in your web server's config,
+and don't forget to reload your web server.
+
+Tips:
+
+* You can adjust the default value in `openssl.cnf +74: "default_crl_days"`
+
+* If you need to recover a revoked certificate, find the corresponding line in `cert/index.php`, change the preceding 'R'(Revoked) to 'V'(Valid), and delete the 3rd field(time of revoking), and run this command under `./cert` to update `crl.pem`:
+
+    user@host ./cert$ openssl ca -config ../openssl.cnf -gencrl -out crl.pem
+
+# show detailed certificate revoke list
+
+    $ ./4-list-revoked-cert.sh
+
+It will parse the crl.pem to show the list(serial no) of revoked cerificates.
+
+# test
+
+You can import the PKCS#12 cert and test with your web browser; to be simpler, you can also try this:
+
+    $ ./5-curl-test-request.sh <cert-holder-name>
+
+If everything's fine, you will see something like this (output by `html/index.php`):
+
+```
+HTTP/1.1 200 OK
+Server: nginx/1.14.0 (Ubuntu)
+Date: Wed, 21 Nov 2018 18:45:25 GMT
+Content-Type: text/plain; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+
+[SUCCESS] emailAddress=test1@dev.com,CN=test1,O=dev.com
+
+$_SERVER = array (
+      ...
+      'SSL_DN' => 'emailAddress=test1@dev.com,CN=test1,O=dev.com',
+      'VERIFIED' => 'SUCCESS',
+      ...
+)
+```
+
+# Special thanks
+
+[How to Create a CA and User Certificates for Your Organization](https://help.cloud.fabasoft.com/index.php?topic=doc/How-to-Create-a-CA-and-User-Certificates-for-Your-Organization-in-Fabasoft-Cloud/certificate-revocation-list-via-openssl.htm)
