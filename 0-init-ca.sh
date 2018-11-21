@@ -21,7 +21,7 @@ if [ -z "$domain" ]; then
 fi
 echo "domain=$domain" > config.sh
 
-serial_no=0000
+serial_no=00
 echo $serial_no > serial
 
 days=3650

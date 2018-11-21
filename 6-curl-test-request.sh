@@ -11,10 +11,10 @@ if [ -z "$username" ]; then
     exit 1
 fi
 
-if [ ! -f newcerts/$username/$username.crt ]; then
+if [ ! -f newcerts/$username/crt.pem ]; then
     echo "Error: invalid user '$username'"
     exit 1
 fi
 
 cd newcerts/$username/
-curl -k -i https://$domain/ --cert ${username}.crt --key ${username}.key
+curl -k -i https://$domain/ --cert crt.pem --key key.pem

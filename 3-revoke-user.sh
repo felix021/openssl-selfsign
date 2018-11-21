@@ -11,16 +11,13 @@ function color_text()
 cd ./cert
 source config.sh
 
-CA_ROOT=./private/
-serial_file=./serial
-
 username=$1
 if [ -z "$username" ]; then
     echo "usage: $0 <username> [silent]"
     exit 1
 fi
 
-file=newcerts/$username/$username.crt
+file=newcerts/$username/crt.pem
 if [ ! -f "$file" ]; then
     echo "Error: invalid user '$username'"
     exit 1

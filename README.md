@@ -1,6 +1,8 @@
 OPENSSL SELFSIGN TOOLS
 ====
 
+[文档: 中文版](README-cn.md)
+
 Usage:
 
 # generate ca:
@@ -28,7 +30,11 @@ If you wish to sign for another domain, you can try this:
 
     $ ./2-sign-user.sh <cert-holder-name>
 
-A PKCS#12 certificate (\<cert-holder-name\>.p12, and corresponding password) will be assiged to the user, which can be imported in both Windows, MacOS, iOS, Android.
+A PKCS#12 certificate (p12 file, and corresponding password) will be assiged to the user, which can be imported in both Windows, MacOS, iOS, Android.
+
+Each certificate will be assigned a unique serial no (used in crl.pem). You can find it in `cert/index.txt`, or use this command:
+
+    openssl x509 -in cert/newcerts/<name>/cert.crt -serial | grep serial
 
 Tips: For iOS, the Mail app (pre-installed with iOS) helps.
 
@@ -53,11 +59,20 @@ Tips:
 
 It will parse the crl.pem to show the list(serial no) of revoked cerificates.
 
+# update crl file
+
+    $ ./5-update-crl.sh
+
+`./cert/crl.pem` will be updated. Replace with it in your web server's config,
+and don't forget to reload your web server.
+
+CRL file should get updated periodly, and better automatically.
+
 # test
 
 You can import the PKCS#12 cert and test with your web browser; to be simpler, you can also try this:
 
-    $ ./5-curl-test-request.sh <cert-holder-name>
+    $ ./6-curl-test-request.sh <cert-holder-name>
 
 If everything's fine, you will see something like this (output by `html/index.php`):
 
@@ -78,6 +93,10 @@ $_SERVER = array (
       ...
 )
 ```
+
+# Known issue:
+
+TODO: can't generate cert for same name.
 
 # Special thanks
 
