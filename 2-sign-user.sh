@@ -69,7 +69,7 @@ openssl pkcs12 -export -in $dir/crt.pem -inkey $dir/key.pem -out $dir/cert.p12 -
 serial_no=`openssl x509 -in $dir/crt.pem -serial -enddate | grep serial | awk -F= '{print $2}'`
 timestr=`openssl x509 -in $dir/crt.pem -serial -enddate | grep notAfter | awk -F= '{print $2}'`
 time=`date --date="$timestr" +%y%m%d%H%M%S`
-echo -e "V\t${time}Z\t\t$serial_no\tunknown\t$subject" >> index.txt
+echo -e "V\t${time}Z\t\t$serial_no\t$dir/crt.pem\t$subject" >> index.txt
 
 echo
 echo -e "Successfully signed for user `color_text $username`:"
