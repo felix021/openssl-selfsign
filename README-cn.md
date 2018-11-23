@@ -31,15 +31,17 @@ OPENSSL 证书签名工具
 
 这个命令会给用户分配一个 PKCS#12 格式的证书 (p12 文件, 以及对应的密码), 可以在 Windows、MacOS、iOS、Android 导入。
 
-每个证书都会分配一个序列号作为其唯一标识（用在吊销列表里），具体编号在 `cert/index.txt` 下可以看到，也可以用命令查看：
-
-    openssl x509 -in cert/newcerts/<name>/cert.crt -serial | grep serial
+每个证书都会分配一个序列号作为其唯一标识（用在吊销列表里）。
 
 Tips: 在 iOS 下，可以用系统自带的 邮件 App 来导入。
 
 # 吊销证书
 
     $ ./3-revoke-user.sh <cert-holder-name>
+
+根据提示输入序列号来选择要吊销的证书，或者
+
+    $ ./3-revoke-user.sh <cert-holder-name@serial>
 
 `./cert/crl.pem` 会被更新，用于替换配置到 web 服务器的旧版本。别忘了重启 web 服务器。
 
@@ -69,7 +71,7 @@ CRL 文件应当定期更新，而且最好是自动更新。
 
 你可以导入 PKCS#12 证书后用浏览器测试。简单点的话，也可以这样：
 
-    $ ./6-curl-test-request.sh <cert-holder-name>
+    $ ./6-curl-test-request.sh <cert-holder-name@serial>
 
 如果一切顺利，你会看到这样的信息（由 `html/index.php` 输出）:
 
@@ -90,10 +92,6 @@ $_SERVER = array (
       ...
 )
 ```
-
-# 已知问题
-
-TODO: 不能为同一个名字重复颁发证书，待修复
 
 # 特别感谢
 

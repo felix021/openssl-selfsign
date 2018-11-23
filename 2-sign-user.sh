@@ -24,18 +24,38 @@ if [ -z "$username" ]; then
     exit 1
 fi
 
-dir=newcerts/$username
-if [ -d $dir ]; then
-    echo
-    echo "$username already allocated."
-    echo
-    exit 1
+function listCert()
+{
+    username=$1
+    echo "Certificates already issued for [$username]: "
+    for i in newcerts/$username@*;
+    do
+        timestr=`openssl x509 -in $i/crt.pem -serial -enddate | grep notAfter | awk -F= '{print $2}'`
+        time=`date --date="$timestr" +%Y-%m-%d\ %H:%M:%S`
+        echo -e "    serial=${i/newcerts\/$username@/}\t issued at $time"
+    done
+}
+
+serial_no=`echo $((16#$(cat serial))) | awk '{printf("%02x", $1 + 1)}'`
+
+check=`echo newcerts/$username@*`
+if [ "$check" != 'newcerts/'$username'@*' ]; then
+    listCert $username
+    read -p "Issue a new certificate? (yes/no)" confirm
+    if [ "$confirm" != "yes" ]; then
+        echo
+        echo "Aborted."
+        echo
+        exit
+    fi
 fi
+
+dir=newcerts/$username@$serial_no
 mkdir -p $dir
 
 #subject="/C=US/ST=California/L=Las Vegas/O=$domain/OU=$domain/CN=$username/emailAddress=$username@$domain"
-#simpler version
-subject="/O=$domain/CN=$username/emailAddress=$username@$domain"
+# fill serial_no in the Country field, to make subject different for each cert.
+subject="/C=$serial_no/O=$domain/CN=$username/emailAddress=$username@$domain"
 
 filename=$dir/$username
 pass=`head -c 32 /dev/urandom | md5sum | head -c 8`
@@ -49,7 +69,7 @@ openssl pkcs12 -export -in $dir/crt.pem -inkey $dir/key.pem -out $dir/cert.p12 -
 serial_no=`openssl x509 -in $dir/crt.pem -serial -enddate | grep serial | awk -F= '{print $2}'`
 timestr=`openssl x509 -in $dir/crt.pem -serial -enddate | grep notAfter | awk -F= '{print $2}'`
 time=`date --date="$timestr" +%y%m%d%H%M%S`
-echo -e "V\t${time}Z\t\t$serial_no\t$dir/crt.pem\t$subject" >> index.txt
+echo -e "V\t${time}Z\t\t$serial_no\tunknown\t$subject" >> index.txt
 
 echo
 echo -e "Successfully signed for user `color_text $username`:"
